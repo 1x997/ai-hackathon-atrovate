@@ -1,6 +1,8 @@
+import time
 import argparse
 import json
 from pprint import pprint
+import os.path
 
 from clarifai.rest import ClarifaiApp
 from clarifai.rest import Image as ClImage
@@ -20,6 +22,9 @@ if __name__ == "__main__":
     """
         python clarifai_run_on_folder.py --input_image_folder images/gambling --class_type gambling
         python clarifai_run_on_folder.py --input_image_folder images/drugs --class_type drugs
+        python clarifai_run_on_folder.py --input_image_folder images/negative --class_type negative
+        python clarifai_run_on_folder.py --input_image_folder images/nudity --class_type nudity
+        python clarifai_run_on_folder.py --input_image_folder images/violence --class_type violence
     """
 
     parser = argparse.ArgumentParser()
@@ -45,7 +50,13 @@ if __name__ == "__main__":
         file_name = fp.split('\\')[1]
         output_json_path = 'results/{}_image_results/{}.json'.format(args.class_type, file_name)
         
-        result = predict_with_local_file(fp)
+        if os.path.exists(output_json_path):
+            print('Path exists: {}'.format(output_json_path))
+            continue
+
+        result = predict_with_local_file(fp) # clarifai
+        # sightsense
+        # azure
 
         #print('Model: ', model)
         #print('Output results: \n\n')
@@ -54,3 +65,5 @@ if __name__ == "__main__":
         print('Outputting JSON to: {}'.format(output_json_path))
         with open(output_json_path, 'w') as fp:
             json.dump(result, fp)
+
+        time.sleep(60)
