@@ -4,25 +4,38 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 // const CLASSIFIER_ENDPOINT = 'https://c3586iuyoe.execute-api.eu-west-1.amazonaws.com/Stage/uploadtos3';
-const CLASSIFIER_ENDPOINT = 'https://localhost';
-const SAMPLING_INTERVAL = 1000;
+const CLASSIFIER_ENDPOINT = 'http://localhost:5000/predict';
+const SAMPLING_INTERVAL = 500;
 // const SAMPLE_RESPONSE = "{'sightengine': {'status': 'success', 'request': {'id': 'req_3YmL8y5ZwsYOBUv2oySIm', 'timestamp': 1540050904.9663, 'operations': 1}, 'weapon': 0.6375, 'alcohol': 0.001, 'drugs': 0.002, 'media': {'id': 'med_3YmLCFG5QaOki7mR2xmT8', 'uri': 'https://s3-eu-west-1.amazonaws.com/crimedetection/live/d9aa26ed-d471-11e8-b7c3-c521eb4347be.jpg'}}, 'azure': {'categories': [{'name': 'others_', 'score': 0.01171875}, {'name': 'people_', 'score': 0.54296875}, {'name': 'people_show', 'score': 0.34375}], 'color': {'dominantColorForeground': 'Black', 'dominantColorBackground': 'Black', 'dominantColors': ['Black'], 'accentColor': '16090A', 'isBwImg': False}, 'description': {'tags': ['person', 'clothing', 'man', 'standing', 'suit', 'wearing', 'holding', 'black', 'hand', 'dark', 'cutting', 'cut', 'woman', 'cake', 'dressed', 'young', 'white', 'knife'], 'captions': [{'text': 'a man wearing a suit and tie', 'confidence': 0.8962813890841713}]}, 'requestId': 'f2ee641f-45f0-4978-bba0-f0a7635317a0', 'metadata': {'width': 213, 'height': 176, 'format': 'Jpeg'}}}";
-const SAMPLE_RESPONSE = "{'class_probabilities': {'nudity': 0.2, 'violence': 0.2, 'gambling': 0.2, 'drugs': 0.2, 'negative': 0.2}}";
+const SAMPLE_RESPONSE = '{"class_probabilities": {"nudity": 0.2, "violence": 0.2, "gambling": 0.2, "drugs": 0.2, "negative": 0.2}}';
 const MAX_FRAMES_IN_ROLL = 15;
+const MAX_CENSORED_FRAMES = 15;
 const LABELS = ['knife', 'nudity', 'gun', 'blood'];
 const VIOLENT = true;
+const NON_VIOLENT = false;
+const HIDE_THRESHOLD_AFTER = 300;
 
 const videoRoot = $('video-root');
 const video = $('video');
 const videoLabels = $('video-labels');
-const img = $('img');
 const framesRoll = $('frames-roll');
 const censoredFrames = $('censored-frames');
+const thresholdSlider = $('threshold-slider');
+const thresholdLabel = $('threshold-label');
 
 let canvas;
 let canvasCtx;
 let lastViolentFrameId = 0;
 let lastNonViolentFrameId = 0;
+let hideTresholdLabelTimer = 0;
+
+
+thresholdSlider.addEventListener('input', () => {
+    thresholdLabel.textContent = getThreshold();
+    thresholdLabel.classList.add('visible');
+    window.clearTimeout(hideTresholdLabelTimer);
+    hideTresholdLabelTimer = window.setTimeout(() => thresholdLabel.classList.remove('visible'), HIDE_THRESHOLD_AFTER);
+}, false);
 
 navigator.mediaDevices.getUserMedia({video: true})
     .then(stream => {
@@ -69,41 +82,45 @@ function classifyFrame(frameId, frame, callback) {
     const prefix = 'data:image/jpeg;base64,';
     const base64Jpeg = frame.slice(prefix.length);
 
-    fetch(CLASSIFIER_ENDPOINT, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({image: base64Jpeg})
-    })
-        .then(res => res.json())
-        .then(res => console.log(res));
-//    window.setTimeout(() => handleClassification(frameId, frame, getRandomClassification(0.2)), 500);
+    // fetch(CLASSIFIER_ENDPOINT, {
+    //     method: 'POST',
+    //     headers: {
+    //         'Accept': 'application/json',
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({image: base64Jpeg})
+    // })
+    //     .then(res => res.json())
+    //     .then(res => {
+    //         console.log(res);
+    //         handleClassification(frameId, frame, res);
+    //     });
+
+    window.setTimeout(() => handleClassification(frameId, frame, SAMPLE_RESPONSE), 500);
 }
 
-function handleClassification(frameId, frame, classification) {
-    const miniature = $(miniatureIdFor(frameId));
 
+function handleClassification(frameId, frame, prediction) {
+    const [classification, labels] = getClassAndLabelsFromPrediction(JSON.parse(prediction));
+    
+    const miniature = $(miniatureIdFor(frameId));
     if (miniature) {
-        if (classification == VIOLENT) {
+        if (classification === VIOLENT) {
             miniature.classList.add('violence-miniature');
         } else {
             miniature.classList.add('non-violence-miniature');
         }
     }
 
-    if (classification == VIOLENT) {
-        console.log(frame);
-        die();
+    if (classification === VIOLENT) {
         if (!isInViolenceMode()) {
             if (frameId > lastNonViolentFrameId) {
                 turnOnViolenceMode();
-                applyRandomLabels();
+                applyLabels(labels);
             }
         } else {
-            if (frameId > lastViolentFrameId && Math.random() <= 0.3) {
-                applyRandomLabels();
+            if (frameId > lastViolentFrameId) {
+                applyLabels(labels);
             }
         }
 
@@ -117,7 +134,7 @@ function handleClassification(frameId, frame, classification) {
 
         censoredFrameImgCell.classList.add('censoredFrameImgRoot');
         
-        censoredFrameLabelsCell.innerHTML = "&#8611; " + getRandomLabels().join(', ');
+        censoredFrameLabelsCell.innerHTML = "&#8611; " + labels.join(', ');
 
         censoredFrameTable.classList.add('censoredFrameRoot');
         censoredFrameTable.appendChild(censoredFrameRow);
@@ -127,6 +144,9 @@ function handleClassification(frameId, frame, classification) {
         
         censoredFrameLabelsCell.classList.add('censoredFrameLabels');
         censoredFrames.insertBefore(censoredFrameTable, censoredFrames.firstChild);
+        if (censoredFrames.childElementCount > MAX_CENSORED_FRAMES) {
+            censoredFrames.removeChild(censoredFrames.lastChild);
+        }
 
         lastViolentFrameId = frameId;
     } else {
@@ -140,16 +160,30 @@ function handleClassification(frameId, frame, classification) {
     }
 }
 
+function getClassAndLabelsFromPrediction(prediction) {
+    const threshold = getThreshold();
+    const classes = prediction['class_probabilities'];
+    const labels = Object.keys(classes).filter(k => classes[k] > threshold);
+    
+    console.log(labels);
+
+    return [labels.length > 0 ? VIOLENT : NON_VIOLENT, labels];
+}
+
+function getThreshold() {
+    return thresholdSlider.value / 100;
+}
+
+function applyLabels(labels) {
+    videoLabels.textContent = labels.join(', ');
+}
+
 function getRandomClassification(statusChangeProbability) {
     const currentlyShowingViolence = isInViolenceMode();
 
     return Math.random() <= statusChangeProbability
         ? !currentlyShowingViolence
         : currentlyShowingViolence;
-}
-
-function applyRandomLabels() {
-    videoLabels.textContent = getRandomLabels().join(', ');
 }
 
 function getRandomLabels() {
