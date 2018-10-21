@@ -1,3 +1,4 @@
+import pickle
 import argparse
 import glob
 from pprint import pprint
@@ -113,17 +114,21 @@ if __name__ == "__main__":
     violence_glob_path = 'results/violence_image_results/*'
     gambling_glob_path = 'results/gambling_image_results/*'
     drugs_glob_path = 'results/drugs_image_results/*'
-    # nudity_glob_path = 'results/nudity_image_results/*'
-    # negative_glob_path = 'results/negative_image_results/*'
+    nudity_glob_path = 'results/nudity_image_results/*'
+    negative_glob_path = 'results/negative_image_results/*'
     
     all_sentences_violence = get_sentences_from_all_image_results_in_folder(violence_glob_path)
     all_sentences_gambling = get_sentences_from_all_image_results_in_folder(gambling_glob_path)
     all_sentences_drugs = get_sentences_from_all_image_results_in_folder(drugs_glob_path)
+    all_sentences_nudity = get_sentences_from_all_image_results_in_folder(nudity_glob_path)
+    all_sentences_negative = get_sentences_from_all_image_results_in_folder(negative_glob_path)
 
     all_sentences = []
     all_sentences.extend(all_sentences_violence)
     all_sentences.extend(all_sentences_gambling)
     all_sentences.extend(all_sentences_drugs)
+    all_sentences.extend(all_sentences_nudity)
+    all_sentences.extend(all_sentences_negative)
 
     vocabulary = list(set([word for sent in all_sentences for word in sent.split(' ')]))
 
@@ -131,25 +136,25 @@ if __name__ == "__main__":
     X_violence, y_violence = get_X_y_from_folder(all_sentences_violence, vocabulary, y_class=0)
     X_gambling, y_gambling = get_X_y_from_folder(all_sentences_gambling, vocabulary, y_class=1)
     X_drugs, y_drugs = get_X_y_from_folder(all_sentences_drugs, vocabulary, y_class=2)
-
-    #X_nudity, y_nudity = get_X_y_from_folder(nudity_glob_path)
-    #X_negative, y_negative = get_X_y_from_folder(negative_glob_path, y_class=1)
+    X_nudity, y_nudity = get_X_y_from_folder(all_sentences_nudity, vocabulary, y_class=3)
+    X_negative, y_negative = get_X_y_from_folder(all_sentences_negative, vocabulary, y_class=4)
 
     #import pdb;pdb.set_trace()
 
     #print(result['outputs'][0]['data'])
-    target_names = ['Violence', 'Gambling', 'Drugs']
+    target_names = ['Violence', 'Gambling', 'Drugs', 'Nudity', 'Negative']
 
-    print(X_violence.shape, X_gambling.shape, X_drugs.shape)
+    print(X_violence.shape, X_gambling.shape, X_drugs.shape, X_nudity.shape, X_negative.shape)
 
-    X_all = np.concatenate([X_violence, X_gambling, X_drugs])
-    y_all = np.concatenate([y_violence, y_gambling, y_drugs])
+    X_all = np.concatenate([X_violence, X_gambling, X_drugs, X_nudity, X_negative])
+    y_all = np.concatenate([y_violence, y_gambling, y_drugs, y_nudity, y_negative])
 
     X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.2, random_state=42)
 
     print('Train X shape: {}. Test X shape: {}'.format(X_train.shape, X_test.shape))
 
-    #clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
+
+    rfc = RandomForestClassifier(n_estimators=100, random_state=0)
     clf = LogisticRegression()
     # GaussianNB would be good.
 
@@ -161,5 +166,23 @@ if __name__ == "__main__":
     y_pred = clf.predict(X_test)
 
     print(classification_report(y_test, y_pred, target_names=target_names))
+
+    rfc.fit(X_train, y_train)
+
+    print('Train score: {}'.format(rfc.score(X_train, y_train)))
+    print('Test score: {}'.format(rfc.score(X_test, y_test)))
+
+    y_pred = rfc.predict(X_test)
+    print(classification_report(y_test, y_pred, target_names=target_names))
+
+    model_obj = {
+        'clf': clf,
+        'vocabulary': vocabulary, 
+    }
+    with open('latest_model_obj.pkl', 'wb') as output:
+        pickle.dump(model_obj, output, pickle.HIGHEST_PROTOCOL)
+
+    with open('latest_model_obj.pkl', 'rb') as input:
+        model_obj = pickle.load(input)
 
     import pdb;pdb.set_trace()

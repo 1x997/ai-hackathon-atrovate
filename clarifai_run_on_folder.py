@@ -54,6 +54,8 @@ if __name__ == "__main__":
             print('Path exists: {}'.format(output_json_path))
             continue
 
+        #print('Processing file: {}'.format(fp))
+        #break
         result = predict_with_local_file(fp) # clarifai
         # sightsense
         # azure
@@ -66,4 +68,4 @@ if __name__ == "__main__":
         with open(output_json_path, 'w') as fp:
             json.dump(result, fp)
 
-        time.sleep(60)
+        time.sleep(1)
