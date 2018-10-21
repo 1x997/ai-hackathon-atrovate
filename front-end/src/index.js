@@ -3,9 +3,11 @@ import NoWebcam from './js/NoWebcam.react';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-const CLASSIFIER_ENDPOINT = 'https://c3586iuyoe.execute-api.eu-west-1.amazonaws.com/Stage/uploadtos3';
+// const CLASSIFIER_ENDPOINT = 'https://c3586iuyoe.execute-api.eu-west-1.amazonaws.com/Stage/uploadtos3';
+const CLASSIFIER_ENDPOINT = 'https://localhost';
 const SAMPLING_INTERVAL = 1000;
-const SAMPLE_RESPONSE = "{'sightengine': {'status': 'success', 'request': {'id': 'req_3YmL8y5ZwsYOBUv2oySIm', 'timestamp': 1540050904.9663, 'operations': 1}, 'weapon': 0.6375, 'alcohol': 0.001, 'drugs': 0.002, 'media': {'id': 'med_3YmLCFG5QaOki7mR2xmT8', 'uri': 'https://s3-eu-west-1.amazonaws.com/crimedetection/live/d9aa26ed-d471-11e8-b7c3-c521eb4347be.jpg'}}, 'azure': {'categories': [{'name': 'others_', 'score': 0.01171875}, {'name': 'people_', 'score': 0.54296875}, {'name': 'people_show', 'score': 0.34375}], 'color': {'dominantColorForeground': 'Black', 'dominantColorBackground': 'Black', 'dominantColors': ['Black'], 'accentColor': '16090A', 'isBwImg': False}, 'description': {'tags': ['person', 'clothing', 'man', 'standing', 'suit', 'wearing', 'holding', 'black', 'hand', 'dark', 'cutting', 'cut', 'woman', 'cake', 'dressed', 'young', 'white', 'knife'], 'captions': [{'text': 'a man wearing a suit and tie', 'confidence': 0.8962813890841713}]}, 'requestId': 'f2ee641f-45f0-4978-bba0-f0a7635317a0', 'metadata': {'width': 213, 'height': 176, 'format': 'Jpeg'}}}";
+// const SAMPLE_RESPONSE = "{'sightengine': {'status': 'success', 'request': {'id': 'req_3YmL8y5ZwsYOBUv2oySIm', 'timestamp': 1540050904.9663, 'operations': 1}, 'weapon': 0.6375, 'alcohol': 0.001, 'drugs': 0.002, 'media': {'id': 'med_3YmLCFG5QaOki7mR2xmT8', 'uri': 'https://s3-eu-west-1.amazonaws.com/crimedetection/live/d9aa26ed-d471-11e8-b7c3-c521eb4347be.jpg'}}, 'azure': {'categories': [{'name': 'others_', 'score': 0.01171875}, {'name': 'people_', 'score': 0.54296875}, {'name': 'people_show', 'score': 0.34375}], 'color': {'dominantColorForeground': 'Black', 'dominantColorBackground': 'Black', 'dominantColors': ['Black'], 'accentColor': '16090A', 'isBwImg': False}, 'description': {'tags': ['person', 'clothing', 'man', 'standing', 'suit', 'wearing', 'holding', 'black', 'hand', 'dark', 'cutting', 'cut', 'woman', 'cake', 'dressed', 'young', 'white', 'knife'], 'captions': [{'text': 'a man wearing a suit and tie', 'confidence': 0.8962813890841713}]}, 'requestId': 'f2ee641f-45f0-4978-bba0-f0a7635317a0', 'metadata': {'width': 213, 'height': 176, 'format': 'Jpeg'}}}";
+const SAMPLE_RESPONSE = "{'class_probabilities': {'nudity': 0.2, 'violence': 0.2, 'gambling': 0.2, 'drugs': 0.2, 'negative': 0.2}}";
 const MAX_FRAMES_IN_ROLL = 15;
 const LABELS = ['knife', 'nudity', 'gun', 'blood'];
 const VIOLENT = true;
@@ -58,38 +60,26 @@ function sampleFrame() {
 
     canvasCtx.drawImage(video, 0, 0);
     const base64Jpeg = canvas.toDataURL('image/jpeg');
-    // img.src = base64Jpeg;
     classifyFrame(frameId, base64Jpeg);
  
     prependToRoll(base64Jpeg, frameId);
-}
-
-function prependToRoll(base64Jpeg, frameId) {
-    const miniature = document.createElement('img');
-    miniature.setAttribute('id', miniatureIdFor(frameId));
-    miniature.src = base64Jpeg;
-    framesRoll.insertBefore(miniature, framesRoll.firstChild);
-    if (framesRoll.childElementCount > MAX_FRAMES_IN_ROLL) {
-        framesRoll.removeChild(framesRoll.lastChild);
-    }
 }
 
 function classifyFrame(frameId, frame, callback) {
     const prefix = 'data:image/jpeg;base64,';
     const base64Jpeg = frame.slice(prefix.length);
 
-    // fetch(CLASSIFIER_ENDPOINT, {
-    //     method: 'POST',
-    //     headers: {
-    //         'Accept': 'application/json',
-    //         'Content-Type': 'application/json',
-    //         'Access-Control-Request-Headers': 'x-requested-with'
-    //     },
-    //     body: JSON.stringify({image: base64Jpeg})
-    // })
-    //     .then(res => res.json())
-    //     .then(res => console.log(res));
-    window.setTimeout(() => handleClassification(frameId, frame, getRandomClassification(0.2)), 500);
+    fetch(CLASSIFIER_ENDPOINT, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({image: base64Jpeg})
+    })
+        .then(res => res.json())
+        .then(res => console.log(res));
+//    window.setTimeout(() => handleClassification(frameId, frame, getRandomClassification(0.2)), 500);
 }
 
 function handleClassification(frameId, frame, classification) {
@@ -174,6 +164,16 @@ function fisherYatesShuffle(a) {
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+}
+
+function prependToRoll(base64Jpeg, frameId) {
+    const miniature = document.createElement('img');
+    miniature.setAttribute('id', miniatureIdFor(frameId));
+    miniature.src = base64Jpeg;
+    framesRoll.insertBefore(miniature, framesRoll.firstChild);
+    if (framesRoll.childElementCount > MAX_FRAMES_IN_ROLL) {
+        framesRoll.removeChild(framesRoll.lastChild);
+    }
 }
 
 function miniatureIdFor(frameId) {
