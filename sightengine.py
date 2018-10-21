@@ -3,11 +3,16 @@ import json
 from sightengine.client import SightengineClient
 
 
-with open('api_keys.json') as f:
-    api_keys = json.load(f)
+class SightEngineParser():
+    def load_apis(self):
+        with open('api_keys.json') as f:
+            self.api_keys = json.load(f)
+    def initialize_client(self):
+        self.client = SightengineClient(self.api_keys['SIGHTENGINE_API_ID'], self.api_keys['SIGHTENGINE_API_KEY'])
 
-client = SightengineClient(api_keys['SIGHTENGINE_API_ID'], api_keys['SIGHTENGINE_API_KEY'])
+    def fetch_results(self, filepath):
+        try:
+            return self.client.check('wad').set_url(filepath)
+        except:
+            return None
 
-output = client.check('wad').set_url('https://s3-eu-west-1.amazonaws.com/crimedetection/52612343-a-man-holding-knife-crime.jpg')
-
-print(output)
