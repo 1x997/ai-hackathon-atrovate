@@ -7,6 +7,8 @@ import os.path
 from clarifai.rest import ClarifaiApp
 from clarifai.rest import Image as ClImage
 
+
+
 import glob
 
 def predict_with_local_file(image_path):
@@ -17,6 +19,9 @@ def predict_with_local_file(image_path):
 def predict_with_url(image_url):
     result = model.predict_by_url(url='image_url')
     return result
+
+
+def initialize()
 
 if __name__ == "__main__":
     """
@@ -49,14 +54,12 @@ if __name__ == "__main__":
     for fp in all_violence_files:
         file_name = fp.split('\\')[1]
         output_json_path = 'results/{}_image_results/{}.json'.format(args.class_type, file_name)
-        
+
         if os.path.exists(output_json_path):
             print('Path exists: {}'.format(output_json_path))
             continue
 
-        #print('Processing file: {}'.format(fp))
-        #break
-        result = predict_with_local_file(fp) # clarifai
+        result_clarifai = predict_with_local_file(fp) # clarifai
         # sightsense
         # azure
 
@@ -66,6 +69,6 @@ if __name__ == "__main__":
 
         print('Outputting JSON to: {}'.format(output_json_path))
         with open(output_json_path, 'w') as fp:
-            json.dump(result, fp)
+            json.dump(result_clarifai, fp)
 
         time.sleep(1)
