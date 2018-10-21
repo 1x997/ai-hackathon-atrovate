@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>AI4Child</title>
+    <link rel="stylesheet" type="text/css" href="src/css/main.css">
+  </head>
+  <body>
+    <div id="header">AI4Child</div>
+    <div id="app-root" class="loading">
+      <img id="bootstrap-spinner" src="res/spinner.gif">
+      <div id="app-main">
+        <div id="video-root">
+          <video id="video" class="hidden" autoplay></video>
+          <div id="video-labels"></div>
+        </div>
+        <img id="img">
+        <div id="frames-roll"></div>
+        <div id="censored-frames-root">
+          <h1>CENSORED FRAMES</h1>
+          <div id="censored-frames"></div>
+        </div>
+      </div>
+    </div>
+    <script src="dist/main.js"></script>
+  </body>
+</html>
