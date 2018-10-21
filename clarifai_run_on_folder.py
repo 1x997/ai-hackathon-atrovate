@@ -61,7 +61,6 @@ if __name__ == "__main__":
 
         result_clarifai = predict_with_local_file(fp) # clarifai
         # sightsense
-        result_sightengine =
         # azure
 
         #print('Model: ', model)

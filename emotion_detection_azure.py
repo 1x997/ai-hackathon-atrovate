@@ -3,11 +3,11 @@ import requests
 # If you are using a Jupyter notebook, uncomment the following line.
 # %matplotlib inline
 import matplotlib.pyplot as plt
-from PIL import Image
+# from PIL import Image
 from io import BytesIO
 
 # Replace <Subscription Key> with your valid subscription key.
-subscription_key = "<Subscription Key>"
+subscription_key = "2800aaf18475439b940929e66c4010fb"
 assert subscription_key
 
 # You must use the same region in your REST call as you used to get your
@@ -22,7 +22,7 @@ vision_base_url = "https://westcentralus.api.cognitive.microsoft.com/vision/v2.0
 analyze_url = vision_base_url + "analyze"
 
 # Set image_path to the local path of an image that you want to analyze.
-image_path = "C:/Documents/ImageToAnalyze.jpg"
+image_path = "images/violence/1027924_orig.jpg"
 
 # Read the image into a byte array
 image_data = open(image_path, "rb").read()
@@ -40,7 +40,7 @@ print(analysis)
 image_caption = analysis["description"]["captions"][0]["text"].capitalize()
 
 # Display the image and overlay it with the caption.
-image = Image.open(BytesIO(image_data))
-plt.imshow(image)
-plt.axis("off")
-_ = plt.title(image_caption, size="x-large", y=-0.1)
+# image = Image.open(BytesIO(image_data))
+# plt.imshow(image)
+# plt.axis("off")
+# _ = plt.title(image_caption, size="x-large", y=-0.1)
