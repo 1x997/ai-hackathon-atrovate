@@ -1,0 +1,159 @@
+document, * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #7BA7E1;
+}
+
+#header {
+    float: left;
+    font-family: monospace;
+    font-size: 50pt;
+    margin-left: 25px;
+    text-align: center;
+}
+
+#app-root {
+    text-align: center;
+    margin: 10px 50px 50px 50px;
+}
+
+#bootstrap-spinner {
+    display: none;
+}
+
+#app-root.loading #bootstrap-spinner {
+    display: block;
+    margin: auto;
+    width: 50px;
+}
+
+#app-root.loading #app-main {
+    display: none;
+}
+
+#video-root {
+    background-color: #000;
+    border: 10px solid #000;
+    border-radius: 25px;
+    display: inline-block;
+    position: relative;
+}
+
+#video-root.non-violence {
+    background-color: #000;
+    border-color: #000;
+}
+
+#video-root.violence {
+    background-color: #f00;
+    border-color: #f00;
+}
+
+#video-labels {
+    color: white;
+    display: none;
+    font-family: sans-serif;
+    font-size: 48px;
+    font-weight: bolder;
+    height: 100%;
+    position: absolute;
+    top: 45%;
+    width: 100%;
+}
+
+#video-root.violence #video-labels {
+    display: block;
+}
+
+#video {
+    margin: auto;
+}
+
+.NoWebcam-root {
+    font-size: 14pt;
+    padding: 8px 4px;
+    font-weight: bolder;
+}
+
+.hidden {
+    display: none;
+}
+
+.blurred {
+    filter: blur(15px);
+}
+
+#frames-roll {
+    float: right;
+    height: 95vh;
+    margin-bottom: 10px;
+    overflow-y: scroll;
+}
+
+#frames-roll::-webkit-scrollbar {
+    width: 8px;
+}
+
+#frames-roll::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+ 
+#frames-roll::-webkit-scrollbar-thumb {
+  background-color: darkgrey;
+  outline: 1px solid slategrey;
+}
+
+#frames-roll img {
+    border: 5px solid;
+    border-image: url(../../res/classifying.gif) 25;
+    border-radius: 10px;
+    display: block;
+    height: 185px;
+    margin-bottom: 6px;
+    min-width: 250px;
+    transition: border 0.3s linear;
+}
+
+#frames-roll img.violence-miniature {
+    border-color: #f00;
+    border-image: none;
+}
+
+#frames-roll img.non-violence-miniature {
+    border-color: #2DC800;
+    border-image: none;
+}
+
+#censored-frames-root {
+    font-family: sans-serif;
+    margin-top: 125px;
+    text-align: left;
+}
+
+#censored-frames-root h1 {
+    display: inline-block;
+    border-bottom: thin solid black;
+}
+
+#censored-frames {
+    margin-top: 12px;
+}
+
+#censored-frames img {
+
+}
+
+.censoredFrameLabels {
+    font-family: sans-serif;
+    font-size: 60px;
+    font-weight: bolder;
+    padding-left: 25px;
+}
+
+.censoredFrameImgRoot {
+    width: 1%;
+}
